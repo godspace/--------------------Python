@@ -1,9 +1,11 @@
 import pygame
 import random
 
+pygame.init()
+
 class Game():
     def __init__(self):
-        self.resolution = (800,600)
+        self.resolution = (500,500)
         self.screen = pygame.display.set_mode(self.resolution)
         self.title = "Flappy Bird"
         self.run = True
@@ -19,10 +21,9 @@ class Bird():
         self.radius = radius
         self.color = color
         self.gravity = 0
-        self.jump = 5
-    def move(self):
-        self.rect = pygame.draw.circle(game.screen, self.color, (self.x, self.y), self.radius)
-        if self.y < game.resolution[1]:
+        self.jump = 10
+    def fall(self):
+        if self.y < game.resolution[1]-self.radius:
             self.gravity += 1
         else:
             self.gravity = 0
@@ -33,9 +34,10 @@ class Bird():
         if mouse[0]:
             self.gravity = -self.jump
         self.y += self.gravity
+    def draw(self):
+        self.rect = pygame.draw.circle(game.screen, self.color, (int(self.x), int(self.y)), self.radius)
 
-
-bird = Bird(int(game.resolution[0]/2), int(game.resolution[1]/2), 20, (255,0,0))
+bird = Bird(int(game.resolution[0]/2), int(game.resolution[1])/2, 20, (255,0,0))
 
 class Tube():
     def __init__(self, x, y, width, height, color):
@@ -44,36 +46,31 @@ class Tube():
         self.width = width
         self.height = height
         self.color = color
-        self.space = 650
         self.speed = 5
     def move(self):
-        self.list = []
-        self.rect = pygame.draw.rect(game.screen, self.color, (self.x, self.y, self.width, self.height))
-        self.list.append(self.rect)
-        self.rect = pygame.draw.rect(game.screen, self.color, (self.x, self.y + self.space, self.width, self.height))
-        self.list.append(self.rect)
         self.x -= self.speed
         if self.x < -self.width:
             self.x = game.resolution[0]
-            self.y = random.randint(-400,-100)
+            self.y = game.resolution[1]-150
     def colide(self):
-        for rect in self.list:
-            if rect.colliderect(bird):
+            if self.rect.colliderect(bird.rect):
                 self.speed = 0
                 bird.gravity = 0
-                break
             else:
                 self.speed = 5
+    def draw(self): 
+        self.rect = pygame.draw.rect(game.screen, self.color, (self.x, self.y, self.width, self.height))
             
-
-tube = Tube(game.resolution[0], -300, 75, 500, (25,100,25))
+tube = Tube(game.resolution[0], game.resolution[1]-150, 75, 150, (25,100,25))
 
 while game.run:
     game.screen.fill((0,175,255))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game.run = False
-    bird.move()
+    bird.draw()
+    bird.fall()
+    tube.draw()
     tube.move()
     tube.colide()
     game.fps_clock.tick(game.fps)
